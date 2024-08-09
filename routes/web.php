@@ -2,61 +2,54 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Models\job;
+use App\Http\Controllers\JobController;
+use App\Http\Controllers\RegisteredUserController;
+use App\Http\Controllers\SessionController;
 
-Route::get('/', function () {
+Route::get('test', function(){
+    \Illuminate\Support\Facades\Mail::to('user@test.com')->send(
+        new \App\Mail\JobPosted()
+    );
 
-    return view('home');
+    return 'Done';
 });
 
-Route::get('/jobs', function () {
-    // return view('jobs', ['jobs' => job::all()]);
+Route::view('/', 'home');
 
-    // using Eager loading
-    // $jobs = Job::with('employer')->get();
-    // $jobs = Job::with('employer')->paginate(3);
-    // $jobs = Job::with('employer')->cursorPaginate(3);
-    $jobs = Job::with('employer')->latest()->simplePaginate(4);
-    return view('jobs.index', [
-        'jobs' => $jobs
-    ]);
-});
+Route::get('/jobs', [JobController::class, 'index']);
+Route::get('/jobs/create', [JobController::class, 'create'])->middleware('auth');
+Route::get('/jobs/{job}', [JobController::class, 'show']);
+Route::post('/jobs', [JobController::class, 'store'])->middleware('auth');
+Route::get('/jobs/{job}/edit', [JobController::class, 'edit'])->middleware(['auth', 'can:edit,job']);
+Route::patch('/jobs/{job}', [JobController::class, 'update']);
+Route::delete('/jobs/{job}', [JobController::class, 'destroy']);
 
-Route::get('/jobs/create', function(){
-    return view('jobs.create');
+// Auth
 
-});
+Route::get('/register', [RegisteredUserController::class, 'register']);
+Route::get('/login', [SessionController::class, 'login'])->name('login');
+Route::post('/insert', [RegisteredUserController::class, 'store']);
+Route::post('/login', [SessionController::class, 'store']);
+Route::post('/logout', [SessionController::class, 'destroy']);
 
-Route::post('/jobs', function(){
 
-  // dd(request()->all());
-  // dd(request('title'));
 
-  request(null)->validate([
 
-    'title' => ['required', 'min:3'],
-    'salary' => ['required']
 
-  ]);
 
-  Job::create([
-    'title' => request('title'),
-    'salary' => request('salary'),
-    'employer_id' => 1
-  ]);
 
-  return redirect('/jobs');
 
-});    
 
-Route::get('/jobs/{id}', function($id) {
 
-   $job = job::find($id);
 
-//    dd($job);
 
-    return view('jobs.show', ['job' => $job]);
-});
 
-Route::get('/contact', function () {
-    return view('contact');
-});
+
+
+
+
+
+
+
+
+Route::view('/contact', 'contact');
